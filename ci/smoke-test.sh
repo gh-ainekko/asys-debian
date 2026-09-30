@@ -5,7 +5,7 @@
 # Run as root (sudo) on a disposable noble host with Docker.
 set -eu
 here=$(cd "$(dirname "$0")/.." && pwd)
-dist=${1:-$here/build/dist}
+dist=$(cd "${1:-$here/build/dist}" && pwd)
 apt-get install -y -q "$dist"/dcomp_*.deb "$dist"/asys-images_*.deb "$dist"/asys_*.deb "$dist"/asys-server_*.deb
 systemctl is-active asys-dashboard
 curl -fsS -o /dev/null http://127.0.0.1:8766/
