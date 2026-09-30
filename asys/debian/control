@@ -1,0 +1,29 @@
+Source: asys
+Section: devel
+Priority: optional
+Maintainer: Roman <roman@nekko.ai>
+Build-Depends: debhelper-compat (= 13), dh-python, python3, golang-1.25-go | golang-go (>= 2:1.25~)
+Standards-Version: 4.6.2
+Homepage: https://github.com/glguida/asys
+Rules-Requires-Root: no
+
+Package: asys
+Architecture: any
+Depends: ${misc:Depends}, ${python3:Depends}, python3 (>= 3.10), dcomp (>= 0.3.1), asys-images (>= ${source:Upstream-Version}), asys-images (<< ${source:Upstream-Version}+), docker.io | docker-ce
+Recommends: git
+Description: agent execution environment with logged runs and shared inference
+ asys runs LLM agents, goals, BPMN workflows, programs and human requests
+ in Docker environments through dcomp, recording every job. This package
+ installs the host commands (asys, asys-run, asys-workers, asys-environment,
+ asys-inference, asys-human-prompt), the bundled operating and authoring
+ skills, dashboard designs, system agents and examples.
+
+Package: asys-server
+Architecture: all
+Depends: ${misc:Depends}, asys (>= ${source:Version}), adduser, python3
+Recommends: nginx
+Description: shared team deployment of asys under /srv/asys
+ Creates the asys group and service user, initializes group-shared asys and
+ dcomp state under /srv/asys, runs the dashboard as a system service, and
+ provides asys-adduser, asys-skills and asys-server-update helpers. On
+ upgrade it refreshes running shared services with "asys update".

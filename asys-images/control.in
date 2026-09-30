@@ -1,0 +1,15 @@
+Package: asys-images
+Version: @VERSION@
+Architecture: amd64
+Maintainer: Roman <roman@nekko.ai>
+Section: devel
+Priority: optional
+Depends: docker.io | docker-ce, zstd
+Homepage: https://github.com/glguida/asys
+Description: base container images for asys @UPSTREAM@
+ Pre-built asys-runtime, asys-workers, asys-worlds, asys-bpmn,
+ asys-human-interface and asys-env-default images, loaded into the local
+ Docker Engine on installation (or later with asys-images-load). Images are
+ tagged with the upstream version and with the ":dev" tag that asys
+ @UPSTREAM@ expects. Old image IDs stay in use by running work and can be
+ removed with "asys-images-load --prune".

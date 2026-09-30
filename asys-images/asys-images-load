@@ -1,0 +1,26 @@
+#!/bin/sh
+# Load the packaged asys base images into the local Docker Engine.
+# usage: asys-images-load [--prune] [--quiet]
+set -eu
+archive=/usr/share/asys/images/asys-images.tar.zst
+manifest=/usr/share/asys/images/manifest
+prune=0; quiet=0
+for arg; do case "$arg" in --prune) prune=1;; --quiet) quiet=1;; *) echo "usage: asys-images-load [--prune] [--quiet]" >&2; exit 2;; esac; done
+say() { [ $quiet = 1 ] || echo "$@"; }
+if ! docker info >/dev/null 2>&1; then
+    echo "asys-images-load: Docker is not available to $(id -un); run this again as a Docker user" >&2
+    exit 1
+fi
+say "Loading asys images from $archive…"
+zstd -dc "$archive" | docker load ${quiet:+-q} >/dev/null
+# manifest: one "NAME VERSION" per line
+while read -r name version; do
+    [ -n "$name" ] || continue
+    docker tag "$name:$version" "$name:dev"
+    say "  $name:$version -> $name:dev"
+done < "$manifest"
+if [ $prune = 1 ]; then
+    say "Removing unreferenced older asys images…"
+    docker images --filter dangling=true --format '{{.ID}}' \
+        | xargs -r docker rmi >/dev/null 2>&1 || true
+fi

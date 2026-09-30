@@ -1,0 +1,23 @@
+#!/bin/sh
+# (Re)initialize the shared instance and refresh its running shared services.
+# Run by asys-server's postinst; safe to rerun by hand as root.
+set -eu
+. /etc/asys/server.conf
+as_service() { runuser -u "$ASYS_USER" -- env BUILDKIT_PROGRESS=plain "$@"; }
+
+install -d -m 2775 -o root -g "$ASYS_GROUP" "$ASYS_HOME"
+install -d -m 2770 -o "$ASYS_USER" -g "$ASYS_GROUP" "$ASYS_HOME/workspaces"
+as_service asys init "$ASYS_STATE_ROOT" --dcomp "$DCOMP_STATE_ROOT" --group "$ASYS_GROUP" >/dev/null
+ln -sfn "${ASYS_STATE_ROOT#$ASYS_HOME/}/asys-env" "$ASYS_HOME/asys-env"
+if [ ! -f "$ASYS_STATE_ROOT/inference/machine.json" ]; then
+    as_service asys-inference --root "$ASYS_STATE_ROOT" init --dcomp-state-root "$DCOMP_STATE_ROOT" >/dev/null || \
+        echo "asys-server: inference init skipped (run 'asys-inference init' later)" >&2
+fi
+if [ "${1:-}" = --update ]; then
+    if docker info >/dev/null 2>&1; then
+        as_service asys --root "$ASYS_STATE_ROOT" update || \
+            echo "asys-server: 'asys update' failed; rerun 'asys-server-update --update' when Docker is available" >&2
+    else
+        echo "asys-server: Docker unavailable; run 'asys-server-update --update' later to refresh shared services" >&2
+    fi
+fi

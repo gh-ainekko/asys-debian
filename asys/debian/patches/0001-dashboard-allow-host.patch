@@ -1,0 +1,61 @@
+Description: dashboard: --allow-host to accept a reverse-proxied Host header
+ The dashboard rejects any Host header other than 127.0.0.1:PORT/localhost:PORT
+ (DNS-rebinding protection). A team server exposes it through a reverse proxy
+ under a real hostname, so allow the operator to list extra acceptable Host
+ values; POST origin checks accept http or https for those hosts.
+Author: Roman <roman@nekko.ai>
+Forwarded: no
+diff --git a/python/asys/cli.py b/python/asys/cli.py
+index 30152ad..a468ea1 100644
+--- a/python/asys/cli.py
++++ b/python/asys/cli.py
+@@ -131,6 +131,8 @@ def arguments(argv):
+                        help='local HTTP port (default: select an available port)')
+     board.add_argument('--design', type=Path, metavar='DIRECTORY',
+                        help='dashboard design package containing design.json, CSS and optional logo/fonts')
++    board.add_argument('--allow-host', action='append', default=[], metavar='HOST[:PORT]',
++                       help='also accept this Host header (repeatable), e.g. behind a reverse proxy')
+ 
+     selected, remaining = parser.parse_known_args(argv)
+     command_parser = selected.argument_parser
+diff --git a/python/asys/dashboard.py b/python/asys/dashboard.py
+index 362f13e..adfcfd0 100644
+--- a/python/asys/dashboard.py
++++ b/python/asys/dashboard.py
+@@ -573,7 +573,7 @@ class DashboardData:
+ 
+ 
+ class Dashboard:
+-    def __init__(self, root, *, port=0, design=None):
++    def __init__(self, root, *, port=0, design=None, allow_hosts=()):
+         self.data = DashboardData(root)
+         self.design = Design(design)
+         self.lock = threading.RLock()
+@@ -658,7 +658,8 @@ class Dashboard:
+                 if not self.allowed():
+                     return self.respond(403, {'error': 'Local dashboard host required'})
+                 origin = self.headers.get('Origin')
+-                if (origin is not None and origin != f"http://{self.headers.get('Host')}"
++                host = self.headers.get('Host')
++                if (origin is not None and origin not in {f'http://{host}', f'https://{host}'}
+                         or self.headers.get('Sec-Fetch-Site') not in {None, 'same-origin', 'none'}):
+                     return self.respond(403, {'error': 'Same-origin execution control required'})
+                 if self.headers.get_content_type() != 'application/json':
+@@ -685,6 +686,7 @@ class Dashboard:
+         self.server.daemon_threads = True
+         self.port = self.server.server_address[1]
+         self.hosts = {f'127.0.0.1:{self.port}', f'localhost:{self.port}'}
++        self.hosts.update(allow_hosts)
+         self.url = f'http://127.0.0.1:{self.port}/'
+         self.thread = None
+ 
+@@ -701,7 +703,8 @@ class Dashboard:
+ 
+ 
+ def dashboard(args):
+-    viewer = Dashboard(args.root, port=args.port, design=args.design).start()
++    viewer = Dashboard(args.root, port=args.port, design=args.design,
++                       allow_hosts=getattr(args, 'allow_host', ())).start()
+     print(f'Dashboard: {viewer.url}\nState: {viewer.data.root}\nPress Ctrl-C to close the dashboard.', flush=True)
+     try:
+         viewer.thread.join()
