@@ -19,8 +19,9 @@ Design notes: [PLAN.md](PLAN.md).
 upstream/dcomp, upstream/asys   pinned upstream releases (submodules)
 dcomp/debian, asys/debian       Debian packaging (asys/debian also builds asys-server)
 asys-images/                    control template + load script for the image package
-ci/                             build-*.sh, build-all.sh, smoke-test.sh
-.github/workflows/build.yml     CI: build -> smoke test -> artifacts -> release on tag
+keys/                           apt repository signing public key
+ci/                             build-*.sh, build-all.sh, smoke-test.sh, make-apt-repo.sh, apt-repo-test.sh
+.github/workflows/build.yml     CI: build -> smoke test -> apt metadata -> artifacts -> release on tag
 ```
 
 ## Build locally
@@ -48,10 +49,33 @@ dch -c asys/debian/changelog  -v A.B.C-1~noble1 -D noble "New upstream release."
 git add -A upstream dcomp asys && git commit && git tag vA.B.C-1 && git push --tags
 ```
 
+Versions must not contain `~` (GitHub rewrites it in asset names). Releases
+are cumulative per tag: each release carries all four packages.
+
+```
+```
+
+## Install from the apt repository
+
+Every `v*` tag publishes a GitHub Release whose assets form a flat, signed apt
+repository at `https://github.com/gh-ainekko/asys-debian/releases/latest/download/`
+(signing key `keys/asys-archive-keyring.gpg`, fingerprint in `keys/FINGERPRINT`;
+CI signs with the `APT_GPG_PRIVATE_KEY` repository secret).
+
+```sh
+sudo curl -fsSL https://github.com/gh-ainekko/asys-debian/releases/latest/download/asys-archive-keyring.gpg -o /usr/share/keyrings/asys-archive-keyring.gpg
+sudo curl -fsSL https://github.com/gh-ainekko/asys-debian/releases/latest/download/asys.sources -o /etc/apt/sources.list.d/asys.sources
+sudo apt update && sudo apt install asys-server
+```
+
+`apt upgrade` then follows new releases (`releases/latest` always points at
+the newest non-prerelease). Pin a specific release by replacing `latest/download`
+with `download/vX.Y.Z-N` in `asys.sources`.
+
 ## Team server
 
 ```sh
-sudo apt install ./dcomp_*.deb ./asys-images_*.deb ./asys_*.deb ./asys-server_*.deb
+sudo apt install asys-server                 # or the local .debs: sudo apt install ./dcomp_*.deb ./asys-images_*.deb ./asys_*.deb ./asys-server_*.deb
 sudo asys-adduser alice bob            # group asys + docker; re-login
 source /srv/asys/asys-env              # in every shell that uses asys
 asys-inference gateway login PROVIDER --as ACCOUNT && asys-inference start   # once

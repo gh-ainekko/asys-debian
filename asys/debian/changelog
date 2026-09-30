@@ -1,11 +1,18 @@
-asys (0.2.0-2~noble1) noble; urgency=medium
+asys (0.2.0-3) noble; urgency=medium
+
+  * Publish releases as a flat signed apt repository on GitHub Releases.
+  * Drop the "~noble1" version suffix (GitHub rewrites "~" in asset names).
+
+ -- Roman <roman@nekko.ai>  Wed, 30 Sep 2026 17:31:28 +0000
+
+asys (0.2.0-2) noble; urgency=medium
 
   * asys: depend on asys-images by upstream version, so Debian revisions
     of asys do not force an image rebuild.
 
  -- Roman <roman@nekko.ai>  Wed, 30 Sep 2026 16:39:59 +0000
 
-asys (0.2.0-1~noble1) noble; urgency=medium
+asys (0.2.0-1) noble; urgency=medium
 
   * Initial packaging of upstream 0.2.0.
   * Patch: dashboard --allow-host for reverse-proxied deployments.

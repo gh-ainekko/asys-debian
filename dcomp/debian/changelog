@@ -1,4 +1,4 @@
-dcomp (0.3.2-1~noble1) noble; urgency=medium
+dcomp (0.3.2-1) noble; urgency=medium
 
   * Initial packaging of upstream v0.3.2.
 

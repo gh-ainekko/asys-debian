@@ -5,6 +5,6 @@ here=$(cd "$(dirname "$0")/.." && pwd)
 "$here/ci/build-dcomp.sh"
 "$here/ci/build-asys.sh"
 "$here/ci/build-images.sh"
-mkdir -p "$here/build/dist"
+rm -rf "$here/build/dist"; mkdir -p "$here/build/dist"
 cp "$here"/build/dcomp/*.deb "$here"/build/asys/*.deb "$here"/build/asys-images/*.deb "$here/build/dist/"
 ls -l "$here/build/dist"
