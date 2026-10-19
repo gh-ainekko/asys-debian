@@ -12,8 +12,8 @@ Package: asys
 Architecture: any
 Depends: ${misc:Depends}, ${python3:Depends}, python3 (>= 3.10), dcomp (>= 0.3.2),
  asys-images (>= ${source:Upstream-Version}), asys-images (<< ${source:Upstream-Version}+),
- docker.io | docker-ce, docker-buildx | docker-buildx-plugin
-Recommends: git
+ docker.io | docker-ce
+Recommends: git, docker-buildx | docker-buildx-plugin
 Suggests: asys-flow-view
 Description: agent execution environment with logged runs and shared inference
  asys runs LLM agents, goals, BPMN/YAML workflows, programs and human requests

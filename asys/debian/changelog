@@ -1,3 +1,10 @@
+asys (0.2.2-2) noble; urgency=medium
+
+  * Recommend rather than depend on docker-buildx: docker-ce hosts may carry
+    buildx outside apt; asys-images-load warns when it is missing.
+
+ -- Roman <roman@nekko.ai>  Mon, 19 Oct 2026 20:41:18 +0000
+
 asys (0.2.2-1) noble; urgency=medium
 
   * New upstream release 0.2.2 (release identity, workflow files, asys version,
