@@ -52,3 +52,19 @@ the checklist here rather than a rubber stamp. The remaining work is a few
 hours in `asys/debian/rules`, `ci/build-asys.sh`, `ci/build-images.sh`,
 `asys-images/*` and `asys-server.postinst`, and I can do it on top of the PR
 branch rather than from scratch.
+
+## Found while releasing 0.2.2-2: image IDs are not portable
+
+`release.json` records `docker image inspect --format {{.Id}}` on the build
+host. With the classic graphdriver (`Storage Driver: overlay2`, e.g. the GitHub
+runner's docker-ce) that is the image *config* digest; with the containerd
+image store (`Storage Driver: overlayfs`, e.g. docker.io 29 on noble) it is the
+*manifest* digest. The same `docker save` archive therefore loads with
+different IDs on the two kinds of host and `asys version` / `asys-run` reject
+every image ("no longer names the image of release …").
+
+Packaging fix: `asys-images` ships the build-host record as
+`/usr/share/asys/images/release.json`; `asys-images-load` (postinst) loads the
+archive and writes `/usr/share/asys/release.json` with the IDs this engine
+reports. Worth reporting upstream: verify images by tag + `RepoDigests`/config
+digest, or offer an `asys images load` that re-records.

@@ -1,3 +1,10 @@
+asys (0.2.2-3) noble; urgency=medium
+
+  * asys-images: regenerate release.json with the local engine's image IDs on
+    load; IDs differ between Docker's graphdriver and containerd image stores.
+
+ -- Roman <roman@nekko.ai>  Mon, 19 Oct 2026 20:55:49 +0000
+
 asys (0.2.2-2) noble; urgency=medium
 
   * Recommend rather than depend on docker-buildx: docker-ce hosts may carry

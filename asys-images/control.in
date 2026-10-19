@@ -10,6 +10,6 @@ Homepage: https://github.com/glguida/asys
 Description: container images and release record for asys @UPSTREAM@
  The images of asys build @BUILD@ (asys-runtime, asys-workers, asys-worlds,
  asys-bpmn, asys-human-interface, asys-env-default), loaded into the local
- Docker Engine on installation (or later with asys-images-load), and the
- release.json that the asys commands use to find them. Old image IDs stay
+ Docker Engine on installation (or later with asys-images-load), which also
+ writes the release.json the asys commands use to find them. Old image IDs stay
  in use by running work; "asys-images-load --prune" removes unreferenced ones.

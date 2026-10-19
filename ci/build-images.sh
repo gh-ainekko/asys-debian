@@ -20,9 +20,11 @@ refs=$(python3 -c 'import json,sys; print(" ".join(e["ref"] for e in json.load(o
 pkg=$work/asys-images_${debversion}_amd64
 mkdir -p "$pkg/DEBIAN" "$pkg/usr/share/asys/images" "$pkg/usr/sbin"
 docker save $refs | zstd -T0 -19 -q -o "$pkg/usr/share/asys/images/asys-images.tar.zst"
-install -m 0644 "$release" "$pkg/usr/share/asys/release.json"
+# Build-host record; asys-images-load rewrites it with this engine's image IDs
+# into /usr/share/asys/release.json (IDs differ between Docker image stores).
+install -m 0644 "$release" "$pkg/usr/share/asys/images/release.json"
 install -m 0755 "$here/asys-images/asys-images-load" "$pkg/usr/sbin/"
-install -m 0755 "$here/asys-images/postinst" "$pkg/DEBIAN/"
+install -m 0755 "$here/asys-images/postinst" "$here/asys-images/postrm" "$pkg/DEBIAN/"
 sed -e "s/@VERSION@/$debversion/" -e "s/@UPSTREAM@/$upstream_version/" -e "s/@BUILD@/$build/" "$here/asys-images/control.in" > "$pkg/DEBIAN/control"
 size=$(du -sk "$pkg/usr" | cut -f1); echo "Installed-Size: $size" >> "$pkg/DEBIAN/control"
 (cd "$pkg" && find usr -type f -exec md5sum {} + > DEBIAN/md5sums)
