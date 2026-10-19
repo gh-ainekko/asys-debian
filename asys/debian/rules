@@ -7,30 +7,41 @@ export GOTOOLCHAIN=local
 export PYTHONDONTWRITEBYTECODE=1
 GO := $(firstword $(wildcard /usr/lib/go-1.25/bin/go) $(shell command -v go))
 DEST := $(CURDIR)/debian/asys
+# The build ID shared with the asys-images package built from the same tree;
+# ci/build-asys.sh writes it into the orig tarball (upstream tools/build-id).
+export ASYS_BUILD := $(shell cat $(CURDIR)/BUILD-ID)
+# Private host Python dependencies, vendored into the orig tarball by ci/build-asys.sh.
 HOSTDEPS := $(CURDIR)/hostdeps
+HOSTDEPS_HUMAN := $(CURDIR)/hostdeps-human
+MAKE_ARGS := PREFIX=/usr ASYS_BUILD=$(ASYS_BUILD) HOST_DEPS=$(HOSTDEPS)
 
 %:
 	dh $@ --with python3
 
 override_dh_auto_build:
-	$(MAKE) host
-	$(MAKE) -C asys-inference build GO=$(GO)
-	# Vendored host TUI dependencies are shipped in the source tree (hostdeps/);
-	# refresh the stamp so upstream's rule does not call pip.
-	test -d $(HOSTDEPS) && touch $(HOSTDEPS)/.installed
-	$(MAKE) -C asys-human-interface host HOST_DEPS=$(HOSTDEPS)
+	touch $(HOSTDEPS)/.installed $(HOSTDEPS_HUMAN)/.installed
+	$(MAKE) host $(MAKE_ARGS)
+	$(MAKE) -C asys-inference build GO=$(GO) ASYS_BUILD=$(ASYS_BUILD)
+	$(MAKE) -C asys-human-interface host HOST_DEPS=$(HOSTDEPS_HUMAN)
+	$(MAKE) -C asys-flow-view
 
 override_dh_auto_test:
 
 override_dh_auto_install:
-	$(MAKE) install-host DESTDIR=$(DEST) PREFIX=/usr
-	$(MAKE) -C asys-inference install DESTDIR=$(DEST) PREFIX=/usr GO=$(GO)
-	$(MAKE) -C asys-human-interface install-host DESTDIR=$(DEST) PREFIX=/usr HOST_DEPS=$(HOSTDEPS)
+	$(MAKE) -C asys-inference install DESTDIR=$(DEST) PREFIX=/usr GO=$(GO) ASYS_BUILD=$(ASYS_BUILD)
+	# The Human install recurses into the root install-host with its own HOST_DEPS
+	# (clobbering share/asys/vendor), so the root install-host must run last.
+	$(MAKE) -C asys-human-interface install-host DESTDIR=$(DEST) $(MAKE_ARGS) HOST_DEPS=$(HOSTDEPS_HUMAN)
+	$(MAKE) install-host DESTDIR=$(DEST) $(MAKE_ARGS)
 	find $(DEST)/usr/share -name __pycache__ -type d -prune -exec rm -rf {} +
-	rm -rf $(DEST)/usr/share/asys-human/vendor/bin
+	rm -rf $(DEST)/usr/share/asys/vendor/bin $(DEST)/usr/share/asys-human/vendor/bin
+	# release.json (image refs and IDs) is shipped by asys-images, which loads those images.
+	rm -f $(DEST)/usr/share/asys/release.json
 	# Examples are documentation; keep upstream paths so the skill docs stay valid.
 	install -d $(DEST)/usr/share/doc/asys/examples
 	cp -a asys-bpmn/examples/. $(DEST)/usr/share/doc/asys/examples/
+	# asys-flow-view
+	$(MAKE) -C asys-flow-view install DESTDIR=$(CURDIR)/debian/asys-flow-view PREFIX=/usr APPDEFAULTSDIR=/etc/X11/app-defaults
 	# asys-server
 	install -D -m 0755 debian/server/asys-adduser $(CURDIR)/debian/asys-server/usr/sbin/asys-adduser
 	install -D -m 0755 debian/server/asys-deluser $(CURDIR)/debian/asys-server/usr/sbin/asys-deluser
@@ -56,3 +67,4 @@ override_dh_compress:
 
 override_dh_auto_clean:
 	rm -rf bin asys-inference/bin asys-human-interface/bin debian/.gocache
+	$(MAKE) -C asys-flow-view clean

@@ -1,9 +1,10 @@
 #!/bin/sh
-# Load the packaged asys base images into the local Docker Engine.
+# Load the packaged asys images into the local Docker Engine and check them
+# against the installed release record.
 # usage: asys-images-load [--prune] [--quiet]
 set -eu
 archive=/usr/share/asys/images/asys-images.tar.zst
-manifest=/usr/share/asys/images/manifest
+release=/usr/share/asys/release.json
 prune=0; quiet=0
 for arg; do case "$arg" in --prune) prune=1;; --quiet) quiet=1;; *) echo "usage: asys-images-load [--prune] [--quiet]" >&2; exit 2;; esac; done
 say() { [ $quiet = 1 ] || echo "$@"; }
@@ -12,15 +13,20 @@ if ! docker info >/dev/null 2>&1; then
     exit 1
 fi
 say "Loading asys images from $archive…"
-zstd -dc "$archive" | docker load ${quiet:+-q} >/dev/null
-# manifest: one "NAME VERSION" per line
-while read -r name version; do
-    [ -n "$name" ] || continue
-    docker tag "$name:$version" "$name:dev"
-    say "  $name:$version -> $name:dev"
-done < "$manifest"
+zstd -dc "$archive" | docker load -q >/dev/null
+python3 - "$release" <<'PY'
+import json, subprocess, sys
+release = json.load(open(sys.argv[1]))
+bad = 0
+for name, entry in sorted(release["images"].items()):
+    actual = subprocess.run(["docker", "image", "inspect", "--format", "{{.Id}}", entry["ref"]],
+                            capture_output=True, text=True).stdout.strip()
+    ok = actual == entry["id"]
+    bad += not ok
+    print(f"  {entry['ref']}  {'ok' if ok else 'MISMATCH ' + (actual or 'missing')}")
+sys.exit(1 if bad else 0)
+PY
 if [ $prune = 1 ]; then
     say "Removing unreferenced older asys images…"
-    docker images --filter dangling=true --format '{{.ID}}' \
-        | xargs -r docker rmi >/dev/null 2>&1 || true
+    docker images --filter dangling=true --format '{{.ID}}' | xargs -r docker rmi >/dev/null 2>&1 || true
 fi

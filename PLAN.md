@@ -210,6 +210,11 @@ asys-packaging/             (this repo)
 
 ## 5. Upstream patches to carry (and send to glguida/asys)
 
+Status after 0.2.2: items 1–2 are solved upstream (release identity / versioned
+image tags; `dashboard --allow-host`); no patches are carried any more. Item 3
+is covered by `asys-images-load`; 4–6 remain nice-to-haves.
+
+
 1. **Image tag selection** – replace hard-coded `:dev` in
    `worker_definitions.py`, `workers.py`, `workflow.py`, `human_service.py` by
    `ASYS_IMAGE_TAG` (default `dev`, packages set `current`/version). Lets old
@@ -256,6 +261,10 @@ asys-packaging/             (this repo)
 ---
 
 ## 7. Milestones
+
+Status (2026-10-19): rebased on asys 0.2.2 (see VALIDATION-0.2.2.md): release.json
+ships in asys-images, one build ID across packages, docker-buildx dependency,
+asys-flow-view package, /srv/asys/host layout, upgrade hook skips active runs.
 
 Status (2026-09-30): M1–M3 done and verified on try-cyclo with a second Unix
 user (`alice`): hello workflow + LLM-backed hello-greeter workflow ran from the

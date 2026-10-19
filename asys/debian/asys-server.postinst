@@ -19,6 +19,7 @@ asys-server: shared instance ready under $ASYS_HOME.
   Grant access:      asys-adduser USER...
   Use it:            source $ASYS_HOME/asys-env
   Inference (once):  asys-inference gateway login PROVIDER --as ACCOUNT && asys-inference start
+  Check:             asys version
 MSG
         fi
         ;;

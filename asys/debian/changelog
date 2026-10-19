@@ -1,3 +1,16 @@
+asys (0.2.2-1) noble; urgency=medium
+
+  * New upstream release 0.2.2 (release identity, workflow files, asys version,
+    update draining, dashboard --allow-host upstream).
+  * Drop the dashboard --allow-host patch (upstream).
+  * Ship release.json with asys-images; one build ID for binaries and images.
+  * Depend on docker-buildx (bare FROM asys-workers needs BuildKit contexts).
+  * New binary package asys-flow-view (X11 viewer/editor).
+  * asys-server: state under /srv/asys/host as upstream documents; the
+    upgrade hook skips asys update while runs are active.
+
+ -- Roman <roman@nekko.ai>  Mon, 19 Oct 2026 20:16:07 +0000
+
 asys (0.2.0-3) noble; urgency=medium
 
   * Publish releases as a flat signed apt repository on GitHub Releases.

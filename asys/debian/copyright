@@ -7,8 +7,8 @@ Copyright: Gianluca Guida
 License: see LICENSE
  See /usr/share/asys/LICENSE and LICENSE.multiagent (installed from upstream).
 
-Files: hostdeps/* asys-inference/vendor/*
-Copyright: respective upstream authors (textual, rich, markdown-it-py,
+Files: hostdeps/* hostdeps-human/* asys-inference/vendor/*
+Copyright: respective upstream authors (ruamel.yaml, textual, rich, markdown-it-py,
  mdit-py-plugins, linkify-it-py, mdurl, platformdirs, pygments,
  typing-extensions; vendored Go modules)
 License: MIT and BSD-2-Clause and PSF-2.0

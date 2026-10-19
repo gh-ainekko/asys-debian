@@ -10,8 +10,9 @@ Design notes: [PLAN.md](PLAN.md).
 |---|---|---|
 | `dcomp` | `ci/build-dcomp.sh` | `dcomp`, `dcomp-proxy`, `dcomp-healthcheck` |
 | `asys` | `ci/build-asys.sh` | all host commands, Python, vendored TUI deps, skills, designs, examples |
-| `asys-images` | `ci/build-images.sh` (needs Docker) | base container images; loaded by postinst / `asys-images-load` |
-| `asys-server` | `ci/build-asys.sh` | shared team instance under `/srv/asys` |
+| `asys-images` | `ci/build-images.sh` (needs Docker + buildx) | container images of the same build ID plus `release.json`; loaded by postinst / `asys-images-load` |
+| `asys-flow-view` | `ci/build-asys.sh` | X11 workflow viewer/editor |
+| `asys-server` | `ci/build-asys.sh` | shared team instance under `/srv/asys` (`asys init /srv/asys/host --group asys`, as upstream documents) |
 
 ## Layout
 
@@ -33,7 +34,11 @@ sudo ci/smoke-test.sh           # installs them and runs the team workflow as us
 ```
 
 Needs Go ≥ 1.25 on PATH, `debhelper`, `dh-python`, `devscripts`, `fakeroot`,
-`python3-pip`, `zstd`, Docker. The scripts default to the submodules; pass
+`python3-pip`, `zstd`, the X11 dev packages from `asys/debian/control`, Docker
+with buildx. `asys` and `asys-images` carry the same upstream **build ID**
+(`tools/build-id`, e.g. `0.2.2-7fd29b7`): the `asys` commands only use images
+named in `/usr/share/asys/release.json`, which `asys-images` ships together with
+those exact images, so the two must come from one `ci/build-all.sh` run. The scripts default to the submodules; pass
 another checkout and revision to build something else
 (`ci/build-asys.sh ~/asys HEAD`). Package versions come from
 `*/debian/changelog` (`dch -i`), image tags from the upstream part of the
@@ -85,8 +90,8 @@ asys system-model set simple MODEL
 `asys-skills --codex|--claude|DIR [--force]` exports the bundled skills for
 agents. The dashboard runs as `asys-dashboard.service` on 127.0.0.1:8766; front
 it with `/usr/share/asys-server/nginx-asys-dashboard.conf`. Upgrading
-`asys-server` runs `asys update` (refreshes the inference gateway and Human
-service; running workflow containers keep their old images);
-`asys-server-update --update` reruns it by hand. Shared git checkouts under
+`asys-server` runs `asys update` only when no run is active (0.2.2's update
+drains running workflows first, which could take hours); otherwise it tells you
+to run `sudo asys-server-update --update` later or `asys-run --upgrade RUN`. Shared git checkouts under
 `/srv/asys/workspaces` need a per-member
 `git config --global --add safe.directory /srv/asys/workspaces/NAME`.

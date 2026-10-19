@@ -6,7 +6,8 @@
 set -eu
 here=$(cd "$(dirname "$0")/.." && pwd)
 dist=$(cd "${1:-$here/build/dist}" && pwd)
-apt-get install -y -q "$dist"/dcomp_*.deb "$dist"/asys-images_*.deb "$dist"/asys_*.deb "$dist"/asys-server_*.deb
+apt-get install -y -q "$dist"/dcomp_*.deb "$dist"/asys-images_*.deb "$dist"/asys_*.deb "$dist"/asys-flow-view_*.deb "$dist"/asys-server_*.deb
+asys-flow-view -help >/dev/null 2>&1 || test -x /usr/bin/asys-flow-view
 systemctl is-active asys-dashboard
 curl -fsS -o /dev/null http://127.0.0.1:8766/
 id smoke >/dev/null 2>&1 || adduser --quiet --disabled-password --gecos smoke smoke
@@ -15,6 +16,10 @@ cat > /tmp/smoke.sh <<'INNER'
 set -eu
 . /srv/asys/asys-env
 cd /srv/asys/workspaces
+# release record and loaded images agree, no service warnings
+asys version | tee /tmp/version.out
+! grep -q '^warning' /tmp/version.out
+# environment image built from a bare "FROM asys-workers" Dockerfile
 asys-run /usr/share/doc/asys/examples/hello/env/dummy /usr/share/doc/asys/examples/hello/workflow.bpmn | tee /tmp/smoke.out
 grep -q 'Hello from asys.' /tmp/smoke.out
 asys ps

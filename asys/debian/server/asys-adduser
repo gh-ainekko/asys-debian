@@ -14,6 +14,7 @@ done
 cat <<MSG
 Members must log in again for the new groups to apply. Then, in each shell:
     source $ASYS_HOME/asys-env
+Then 'asys version' shows the installed release and its services.
 Git refuses checkouts owned by another member ("dubious ownership"); for a
 shared checkout under $ASYS_HOME/workspaces each member runs once:
     git config --global --add safe.directory $ASYS_HOME/workspaces/NAME
